@@ -1,0 +1,42 @@
+{% load static %}
+<html>
+<head>
+    <title>Add Record</title>
+    <link rel="stylesheet" href="{% static 'library/css/add_book.css' %}">
+</head>
+<body>
+    <h1>Add Record</h1>
+
+
+    <form action="{% url 'library:add-member' %}" method="POST">
+            {% csrf_token %}
+            <div class="row form-group">
+                <div class="col col-md-3">
+                    <label for="name" class="form-control-label">Name:</label>
+                </div>
+                <div class="col col-md-8">
+                    {{ form.name }}
+                </div>
+            </div>
+            <div class="row form-group">
+                <div class="col col-md-3">
+                    <label for="contact" class="form-control-label">Contact:</label>
+                </div>
+                <div class="col col-md-8">
+                    {{ form.contact }}
+                </div>
+            </div>
+            <div class="row form-group">
+                <div class="col col-md-3">
+                    <label for="outstanding_debt" class="form-control-label">Outstanding Debt:</label>
+                </div>
+                <div class="col col-md-8">
+                    {{ form.outstanding_debt }}
+                </div>
+            </div>
+
+            <button type="submit">Add</button>
+        </form>
+
+</body>
+</html>

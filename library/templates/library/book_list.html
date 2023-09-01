@@ -1,0 +1,69 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'library/book_list.css' %}">
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Example</title>
+</head>
+<body>
+    <header>
+        <h1> Book Dashboard</h1>
+    </header>
+
+    <div class="navbar">
+        <ul>
+            <li><a href="{% url 'library:member_list'%}">Member</a></li>
+            <li><a href="{% url 'library:transaction_list'%}">Transaction</a></li>
+        </ul>
+    </div>
+
+    <div class="container">
+        <div class="button-container">
+            <a href="{% url 'library:add-book'%}"><button>Add New</button></a>
+        </div>
+        <div class="table-container">
+            <div class="search-container">
+                <form method="GET" action="{% url 'library:list' %}">
+                    <input type="text" name="search_name" placeholder="Search by Book Name">
+                    <button type="submit">Search</button>
+                </form>
+            </div>
+            <table class="table table-striped table-bordered" id="dtTable">
+                <thead>
+                    <tr>
+                        <th>Book Name</th>
+                        <th>Author</th>
+                        <th>Quantity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for book in book %}
+                        <tr>
+                            <td>{{ book.name }}</td>
+                            <td>{{ book.author }}</td>
+                            <td>{{ book.quantity }}</td>
+                            <td>
+                                <a href="{% url 'library:update-book' book.id%}"><button class="edit-button">Edit</button></a>
+                            </td>
+                            <td>
+                                <form action="{% url 'library:delete-book' book.id %}" method="POST">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.path }}">
+                                    <button class="delete-button" type="submit">Delete</button>
+                                </form>
+                            </td>
+                            
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+</body>
+</html>
+
+
+
+

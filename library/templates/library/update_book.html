@@ -1,0 +1,25 @@
+{% load static %}
+<html>
+<head>
+    <title>Update Record</title>
+    <link rel="stylesheet" href="{% static 'library/css/add_book.css' %}">
+</head>
+<body>
+    <h1>Update Record</h1>
+
+    <form  method="post">
+        {% csrf_token %}
+        <label for="name">Name:</label>
+            {{ form.name }}
+
+        <label for="author">Author:</label>
+            {{ form.author }}
+
+        <label for="quantity">Quantity:</label>
+            {{ form.quantity }}
+
+        <button type="submit">Save</button>
+    </form>
+
+</body>
+</html>

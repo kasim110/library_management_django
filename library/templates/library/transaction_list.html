@@ -1,0 +1,57 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'library/book_list.css' %}">
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Example</title>
+</head>
+<body>
+    <header>
+        <h1> Transaction</h1>
+    </header>
+
+    <div class="navbar">
+        <ul>
+            <li><a href="{% url 'library:list'%}">Book</a></li>
+            <li><a href="{% url 'library:member_list'%}">Member</a></li>
+        </ul>
+    </div>
+
+    <div class="container">
+        <div class="button-container">
+            {% comment %} <a href="{% url 'student:add'%}"><button>Add New</button></a> {% endcomment %}
+        </div>
+        <div class="table-container">
+            <table class="table table-striped table-bordered" id="dtTable">
+                <thead>
+                    <tr>
+                        <th>Book Name</th>
+                        <th>Member</th>
+                        <th>Issue Date</th>
+                        <th>Return Date</th>
+                        <th>Fees</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transaction %}
+                        <tr>
+                            <td>{{ transaction.book }}</td>
+                            <td>{{ transaction.member }}</td>
+                            <td>{{ transaction.issue_date }}</td>
+                            <td>{{ transaction.return_date }}</td>
+                            <td>{{ transaction.fees }}</td>
+                            
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+</body>
+</html>
+
+
+
+
