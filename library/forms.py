@@ -82,3 +82,26 @@ class MemberForm(forms.ModelForm):
     class  Meta:
         model = Member
         fields = ['name','contact','outstanding_debt']
+
+
+
+class IssueBookForm(forms.Form):
+    member = forms.ModelChoiceField(queryset=Member.objects.all(), label='Select Member')
+    book = forms.ModelChoiceField(queryset=Book.objects.filter(quantity__gt=0), label='Select Book')
+    quantity = forms.IntegerField(label='Quantity', min_value=1)
+
+
+class ReturnBookForm(forms.Form):
+    member = forms.ModelChoiceField(queryset=Member.objects.all(), label='Select Member')
+    book = forms.ModelChoiceField(queryset=Book.objects.filter(quantity__gt=0), label='Select Book')
+    quantity = forms.IntegerField(label='Quantity to Return', min_value=1)
+
+
+
+class FrappeImportForm(forms.Form):
+    title = forms.CharField(max_length=255, required=False)
+    authors = forms.CharField(max_length=255, required=False)
+    isbn = forms.CharField(max_length=20, required=False)
+    publisher = forms.CharField(max_length=255, required=False)
+    page = forms.IntegerField(min_value=1, required=False)
+    quantity = forms.IntegerField(min_value=1, initial=20)

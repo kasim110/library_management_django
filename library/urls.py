@@ -15,6 +15,7 @@ urlpatterns = [
     path('update/member/<int:id>/',views.MemberUpdateview.as_view(),name='update-member'),
     path('delete/member/<int:id>/',views.MemberDeleteView.as_view(),name='delete-member'),
     path('transaction/list/',views.transactionListview.as_view(),name='transaction_list'),
-    path('issue_book/<int:member_id>/<int:book_id>/', views.IssueBookView.as_view(), name='issue_book'),
-    path('return_book/<int:transaction_id>/', views.ReturnBookView.as_view(), name='return_book'),
+    path('issue_book/', views.IssueBookView.as_view(), name='issue_book'),
+    path('return_book/', views.ReturnBookView.as_view(), name='return_book'),
+    path('import_books/', views.import_books_from_frappe, name='import-books'),
 ]

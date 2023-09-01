@@ -3,10 +3,11 @@ from django.shortcuts import get_object_or_404, render
 from django.views import View
 from django.views import generic
 from library.models import Book, Member, Transaction
-from library.forms import BookForm, MemberForm
+from library.forms import BookForm, FrappeImportForm, IssueBookForm, MemberForm, ReturnBookForm
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.db.models import Q
+import requests
 
 
 class Baseview(View):
@@ -160,52 +161,114 @@ class transactionListview(View):
 
 
 class IssueBookView(View):
-    def get(self, request, member_id, book_id):
+    def get(self, request):
+        form = IssueBookForm()
+        return render(request, 'library/issue_book.html', {'form': form})
   
-        return render(request, 'library/issue_book.html', {'member_id': member_id, 'book_id': book_id})
-    
-    def post(self, request, member_id, book_id):
-        member = Member.objects.get(pk=member_id)
-        book = Book.objects.get(pk=book_id)
-        
-        if member.outstanding_debt >= 500:
-            return redirect('library:member_list', member_id=member_id, error_message='Outstanding debt limit reached.')
-        
-        if book.quantity > 0:
-            transaction = Transaction.objects.create(
-                book=book,
-                member=member,
-                issue_date=date.today(),
-                return_date=None
-            )
-            
-            book.quantity -= 1
+    def post(self, request):
+        form = IssueBookForm(request.POST)
+        if form.is_valid():
+            member = form.cleaned_data['member']
+            book = form.cleaned_data['book']
+            quantity = form.cleaned_data['quantity']
+
+            if member.outstanding_debt > 500:
+                return render(request, 'library/error.html', {'message': 'Member has outstanding debt exceeding ₹500. Cannot issue book.'})
+
+            # Create transaction records for the selected member and book
+            for _ in range(quantity):
+                transaction = Transaction(member=member, book=book,issue_date=date.today())
+                transaction.save()
+
+            # Update the book's quantity in stock
+            book.quantity -= quantity
             book.save()
-            
-            return redirect('library:member_list', member_id=member_id, success_message='Book issued successfully.')
-        else:
-            return redirect('library:member_list', member_id=member_id, error_message='Book is not available.')
+
+            return redirect('library:transaction_list')
         
 
 
 class ReturnBookView(View):
-    def post(self, request, transaction_id):
-        transaction = Transaction.objects.get(pk=transaction_id)
-        
-        if transaction.return_date is None:
-            days_overdue = (date.today() - transaction.issue_date).days
-            if days_overdue > 0:
-                transaction.fees = days_overdue * 10  # Assuming Rs. 10 per day fee
-        
-        book = transaction.book
-        book.quantity += 1
-        book.save()
-        
-        member = transaction.member
-        member.outstanding_debt += transaction.fees
-        member.save()
-        
-        transaction.return_date = date.today()
-        transaction.save()
-        
-        return redirect('library:member_list', member_id=member.id, success_message='Book returned successfully.')
+    def get(self, request):
+        form = ReturnBookForm()
+        return render(request, 'library/return_book.html', {'form': form})
+
+    def post(self, request):
+        form = ReturnBookForm(request.POST)
+        if form.is_valid():
+            member = form.cleaned_data['member']
+            book = form.cleaned_data['book']
+            quantity = form.cleaned_data['quantity']
+
+
+            if member.outstanding_debt > 500:
+                return render(request, 'library/error.html', {'message': 'Member has outstanding debt exceeding ₹500. Cannot issue book.'})
+
+            # Check if there are existing transaction records to modify
+            existing_transactions = Transaction.objects.filter(
+                member=member, book=book, return_date__isnull=True
+            ).order_by('issue_date')[:quantity]
+
+            for transaction in existing_transactions:
+                # Calculate fees for overdue books
+                days_overdue = (date.today() - transaction.issue_date).days
+                if days_overdue > 0:
+                    transaction.fees = days_overdue * 10  # Assuming Rs. 10 per day fee
+
+
+                transaction.return_date = date.today()
+                transaction.save()
+
+            book.quantity += quantity
+            book.save()
+
+            member.outstanding_debt += transaction.fees
+            member.save()
+
+            
+
+            return redirect('library:transaction_list')
+        return render(request, 'library/return_book.html', {'form': form})
+    
+
+
+
+def import_books_from_frappe(request):
+    if request.method == 'POST':
+        form = FrappeImportForm(request.POST)
+        if form.is_valid():
+            # Get form data
+            title = form.cleaned_data['title']
+            authors = form.cleaned_data['authors']
+            isbn = form.cleaned_data['isbn']
+            publisher = form.cleaned_data['publisher']
+            page = form.cleaned_data['page']
+            quantity = form.cleaned_data['quantity']
+
+            # Build the API URL with parameters
+            api_url = 'https://frappe.io/api/method/frappe-library'
+            params = {
+                'title': title,
+                'authors': authors,
+                'isbn': isbn,
+                'publisher': publisher,
+                'page': page,
+                'limit_start': 0,
+                'limit_page_length': quantity,
+            }
+
+            # Make a GET request to the Frappe API
+            response = requests.get(api_url, params=params)
+
+            if response.status_code == 200:
+                # Process the API response here and create book records
+                # For example, you can parse the JSON response and create Book objects
+
+                return redirect('library:list')  # Redirect to success page
+            else:
+                return render(request, 'error.html', {'message': 'Failed to import books'})  # Show an error message
+
+    else:
+        form = FrappeImportForm()
+
+    return render(request, 'library/import_book.html', {'form': form})
