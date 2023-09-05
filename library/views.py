@@ -8,6 +8,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.db.models import Q
 import requests
+from django.views.decorators.csrf import csrf_exempt
 
 
 class Baseview(View):
@@ -232,7 +233,7 @@ class ReturnBookView(View):
     
 
 
-
+@csrf_exempt
 def import_books_from_frappe(request):
     if request.method == 'POST':
         form = FrappeImportForm(request.POST)
@@ -252,19 +253,30 @@ def import_books_from_frappe(request):
                 'authors': authors,
                 'isbn': isbn,
                 'publisher': publisher,
-                'page': page,
-                'limit_start': 0,
-                'limit_page_length': quantity,
+                '  num_pages': page,
+                # 'limit_start': 0,
+                # 'limit_page_length': quantity,
             }
 
             # Make a GET request to the Frappe API
             response = requests.get(api_url, params=params)
 
             if response.status_code == 200:
+                books_data = response.json().get('message', [])
                 # Process the API response here and create book records
                 # For example, you can parse the JSON response and create Book objects
+                for book_data in books_data:
+                    # Create a Book object for each imported book
+                    book = Book(
+                        name=book_data.get('title', ''),
+                        author=book_data.get('authors', ''),
+                        isbn=book_data.get('isbn', ''),
+                        publisher=book_data.get('publisher', ''),
+                        page=book_data.get('  num_pages', 0),
+                    )
+                    book.save()  # Save the Book object to the database
 
-                return redirect('library:list')  # Redirect to success page
+                return redirect('library:list')
             else:
                 return render(request, 'error.html', {'message': 'Failed to import books'})  # Show an error message
 
