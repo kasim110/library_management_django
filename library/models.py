@@ -7,6 +7,9 @@ class Book(TimeStampedModel):
     name = models.CharField(max_length=100)
     author = models.CharField(max_length=100)
     quantity = models.PositiveIntegerField()
+    isbn = models.CharField(max_length=20,null=True ,blank=True)
+    publisher = models.CharField(max_length=255,null=True,blank=True)
+    page = models.PositiveIntegerField(null=True,blank=True)
 
 
 
